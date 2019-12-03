@@ -8,8 +8,8 @@
         (+ fuel (calculate-total-fuel fuel))
         0)))
 
-(defun sum-fuels (f masses)
-  (reduce #'+ (mapcar f masses)))
+(defun sum-fuels (fuel-calc-func masses)
+  (reduce #'+ (mapcar fuel-calc-func masses)))
 
 (defun main (&optional (part 2))
   (let* ((input (open "day1.txt"))
