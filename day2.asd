@@ -1,5 +1,5 @@
 (asdf:defsystem #:day-2
   :serial t
-  :depends-on (:split-sequence)
+  :depends-on (:split-sequence :cl-arrows)
   :pathname "./"
-  :components ((:file "day-2")))
+  :components ((:file "day2")))
