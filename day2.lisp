@@ -9,4 +9,11 @@
 (defun parse-input (input)
   (->> input
        (split-sequence #\,)
-       (mapcar #'parse-integer)))
+       (map 'vector #'parse-integer)))
+
+(defun add-opcode (ints current-opcode-index)
+  (let ((pos-1 (aref ints (+ current-opcode-index 1)))
+        (pos-2 (aref ints (+ current-opcode-index 2))))
+
+    )
+  )
