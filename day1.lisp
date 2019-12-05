@@ -1,3 +1,9 @@
+(defpackage :day-1
+  (:use :cl)
+  (:export :main))
+
+(in-package :day-1)
+
 (defun calculate-fuel (mass)
   (- (floor (/ mass 3))
      2))
@@ -11,7 +17,7 @@
 (defun sum-fuels (fuel-calc-func masses)
   (reduce #'+ (mapcar fuel-calc-func masses)))
 
-(defun main (&optional (part 2))
+(defun main (&key (part 2))
   (let* ((input (open "day1.txt"))
          (masses (loop for line = (read-line input nil)
                        while line
