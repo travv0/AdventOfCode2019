@@ -42,11 +42,11 @@
             (return-from outer (+ (* 100 potential-noun) potential-verb))))))))
 
 (defun main (&key (part 2))
-  (let* ((input (open "day2.txt"))
-         (ints (-> input
-                   (read-line nil)
-                   parse-input
-                   (set-state 12 2))))
+  (let* ((ints (with-open-file (input "day2.txt")
+                 (-> input
+                     (read-line nil)
+                     parse-input
+                     (set-state 12 2)))))
     (cond ((= part 1) (process-intcode ints))
           ((= part 2) (find-noun-and-verb ints 19690720))
           (t (error "`part' must be either 1 or 2")))))
