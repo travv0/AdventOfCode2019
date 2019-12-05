@@ -25,20 +25,28 @@
              (cond ((= opcode 1) (handle-opcode #'+ ints i))
                    ((= opcode 2) (handle-opcode #'* ints i))
                    (t (error (format nil "Invalid opcode: ~a" opcode))))))
+  (aref ints 0))
+
+(defun set-state (ints noun verb)
+  (setf (aref ints 1) noun
+        (aref ints 2) verb)
   ints)
 
-(defun restore-state (ints)
-  (setf (aref ints 1) 12
-        (aref ints 2) 2)
-  ints)
+(defun find-noun-and-verb (ints expected-output)
+  (block outer
+    (loop for potential-noun from 0 to 99 do
+      (loop for potential-verb from 0 to 99 do
+        (let ((initial-ints (copy-seq ints)))
+          (set-state initial-ints potential-noun potential-verb)
+          (when (= (process-intcode initial-ints) expected-output)
+            (return-from outer (+ (* 100 potential-noun) potential-verb))))))))
 
-(defun main (&key (part 1))
+(defun main (&key (part 2))
   (let* ((input (open "day2.txt"))
          (ints (-> input
                    (read-line nil)
                    parse-input
-                   restore-state)))
-    (aref (cond ((= part 1) (process-intcode ints))
-                ((= part 2) (error "unimplemented"))
-                (t (error "`part' must be either 1 or 2")))
-          0)))
+                   (set-state 12 2))))
+    (cond ((= part 1) (process-intcode ints))
+          ((= part 2) (find-noun-and-verb ints 19690720))
+          (t (error "`part' must be either 1 or 2")))))
