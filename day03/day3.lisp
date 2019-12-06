@@ -8,9 +8,7 @@
   (let ((changing-coord (if (eq axis :x) curr-x curr-y)))
     (loop for i = changing-coord then (funcall arith-func i 1)
           for segment-distance = 1 then (1+ segment-distance)
-          until (= i (funcall arith-func
-                              changing-coord
-                              count))
+          until (= i (funcall arith-func changing-coord count))
           finally (return-from lay-wire (let ((x (if (eq axis :x) i curr-x))
                                               (y (if (eq axis :y) i curr-y)))
                                           (values grid x y (+ total-distance (1- segment-distance)))))
@@ -92,9 +90,8 @@
                   (loop for line = (read-line input nil)
                         while line
                         collect line)))
-         (paths (parse-input lines)))
-    (cond ((= part 1) (get-distance-to-closest-intersection
-                       (process-paths (make-hash-table :test 'equal) paths)))
-          ((= part 2) (get-lowest-number-of-steps
-                       (process-paths (make-hash-table :test 'equal) paths)))
+         (paths (parse-input lines))
+         (processed-paths (process-paths (make-hash-table :test 'equal) paths)))
+    (cond ((= part 1) (get-distance-to-closest-intersection processed-paths))
+          ((= part 2) (get-lowest-number-of-steps processed-paths))
           (t (error "`part' must be either 1 or 2")))))
