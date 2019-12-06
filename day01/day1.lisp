@@ -18,7 +18,7 @@
   (reduce #'+ (mapcar fuel-calc-func masses)))
 
 (defun main (&key (part 2))
-  (let* ((masses (with-open-file (input "day1.txt")
+  (let* ((masses (with-open-file (input "input.txt")
                    (loop for line = (read-line input nil)
                          while line
                          collect (parse-integer line)))))

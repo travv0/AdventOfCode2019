@@ -33,16 +33,15 @@
   ints)
 
 (defun find-noun-and-verb (ints expected-output)
-  (block outer
-    (loop for potential-noun from 0 to 99 do
-      (loop for potential-verb from 0 to 99 do
-        (let ((initial-ints (copy-seq ints)))
-          (set-state initial-ints potential-noun potential-verb)
-          (when (= (process-intcode initial-ints) expected-output)
-            (return-from outer (+ (* 100 potential-noun) potential-verb))))))))
+  (loop for potential-noun from 0 to 99 do
+    (loop for potential-verb from 0 to 99 do
+      (let ((initial-ints (copy-seq ints)))
+        (set-state initial-ints potential-noun potential-verb)
+        (when (= (process-intcode initial-ints) expected-output)
+          (return-from find-noun-and-verb (+ (* 100 potential-noun) potential-verb)))))))
 
 (defun main (&key (part 2))
-  (let* ((ints (with-open-file (input "day2.txt")
+  (let* ((ints (with-open-file (input "input.txt")
                  (-> input
                      (read-line nil)
                      parse-input
