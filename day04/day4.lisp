@@ -18,8 +18,7 @@
 
 (defun has-sequential-digits-p (number-char-list)
   (loop for (char-1 char-2) in (maplist #'identity number-char-list)
-        when (eql char-1 char-2)
-          return t))
+          thereis (eql char-1 char-2)))
 
 (defun has-exactly-two-sequential-digits-p (number-char-list)
   (loop for (char-1 char-2 char-3 char-4) in (maplist #'identity (cons nil number-char-list))
