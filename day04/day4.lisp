@@ -7,9 +7,9 @@
   (coerce (write-to-string number) 'list))
 
 (defun count-valid-passwords-in-range (sequential-digit-check-func min max)
-  (length (loop for i from min to max
-                when (check-password sequential-digit-check-func i)
-                  collect i)))
+  (loop for i from min to max
+        when (check-password sequential-digit-check-func i)
+          count i))
 
 (defun check-password (sequential-digit-check-func number)
   (let ((number-char-list (number-to-char-list number)))
@@ -23,10 +23,9 @@
 
 (defun has-exactly-two-sequential-digits-p (number-char-list)
   (loop for (char-1 char-2 char-3 char-4) in (maplist #'identity (cons nil number-char-list))
-        when (and (eql char-2 char-3)
-                  (not (eql char-1 char-2))
-                  (not (eql char-3 char-4)))
-          return t))
+          thereis (and (eql char-2 char-3)
+                       (not (eql char-1 char-2))
+                       (not (eql char-3 char-4)))))
 
 (defun main (&key (part 2) (min 128392) (max 643281))
   (cond ((= part 1) (count-valid-passwords-in-range #'has-sequential-digits-p min max))
