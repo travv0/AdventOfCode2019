@@ -1,11 +1,11 @@
-(defpackage :day-5
+(defpackage :day-7
   (:use :cl
         :cl-arrows
         :split-sequence
         :alexandria)
   (:export :main))
 
-(in-package :day-5)
+(in-package :day-7)
 
 (declaim (optimize debug))
 
@@ -30,7 +30,7 @@
 
 (defun handle-input-opcode (ints current-opcode-index mode-flags)
   (declare (ignore mode-flags))
-  (format t "> ")
+  (format *error-output* "> ")
   (force-output)
   (let ((pos (aref ints (1+ current-opcode-index)))
         (input (parse-integer (read-line) :junk-allowed t)))
@@ -81,9 +81,33 @@
                 while (> i 0)
                 collecting (mod i 10))))
 
+(defun calculate-output-signal (ints phase-settings)
+  (loop for phase-setting in phase-settings
+        for s = (make-array '(0) :element-type 'base-char
+                                 :fill-pointer 0 :adjustable t)
+        with input-signal = 0
+        do (with-input-from-string
+               (*standard-input* (format nil "~d~%~d~%" phase-setting input-signal))
+             (with-output-to-string (*standard-output* s)
+               (process-intcode (copy-seq ints))
+               (setf input-signal (parse-integer s :junk-allowed t))))
+        finally (return input-signal)))
+
+(defun calculate-maximum-output-signal (ints)
+  (apply #'max
+         (mapcar (curry #'calculate-output-signal ints)
+                 (all-permutations '(0 1 2 3 4)))))
+
+(defun all-permutations (list)
+  (cond ((null list) nil)
+        ((null (cdr list)) (list list))
+        (t (loop for element in list
+                 append (mapcar (lambda (l) (cons element l))
+                                (all-permutations (remove element list)))))))
+
 (defun main ()
   (let* ((ints (with-open-file (input "input.txt")
                  (-> input
                      (read-line nil)
                      parse-input))))
-    (process-intcode ints)))
+    (calculate-maximum-output-signal ints)))
