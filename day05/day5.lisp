@@ -1,76 +1,90 @@
 (defpackage :day-5
   (:use :cl
         :cl-arrows
-        :split-sequence)
+        :split-sequence
+        :alexandria)
   (:export :main))
 
 (in-package :day-5)
+
+(declaim (optimize debug))
 
 (defun parse-input (input)
   (->> input
        (split-sequence #\,)
        (map 'vector #'parse-integer)))
 
-(defun handle-arithmetic-opcode (f ints current-opcode-index)
-  (let ((pos-1 (aref ints (+ current-opcode-index 1)))
-        (pos-2 (aref ints (+ current-opcode-index 2)))
-        (result-pos (aref ints (+ current-opcode-index 3))))
-    (setf (aref ints result-pos)
-          (funcall f (aref ints pos-1) (aref ints pos-2))))
-  4)
+(defun get-value (ints current-opcode-index mode-flags argument-index)
+  (let ((arg (aref ints (+ current-opcode-index argument-index))))
+    (if (eql (nth (1- argument-index) mode-flags) 1)
+        arg
+        (aref ints arg))))
 
-(defun handle-input-opcode (ints current-opcode-index)
+(defun handle-arithmetic-opcode (f ints current-opcode-index mode-flags)
+  (let ((val-1 (get-value ints current-opcode-index mode-flags 1))
+        (val-2 (get-value ints current-opcode-index mode-flags 2))
+        (output-pos (aref ints (+ current-opcode-index 3))))
+    (setf (aref ints output-pos)
+          (funcall f val-1 val-2)))
+  (+ current-opcode-index 4))
+
+(defun handle-input-opcode (ints current-opcode-index mode-flags)
+  (declare (ignore mode-flags))
   (format t "> ")
   (force-output)
   (let ((pos (aref ints (1+ current-opcode-index)))
         (input (parse-integer (read-line) :junk-allowed t)))
     (setf (aref ints pos) input))
-  2)
+  (+ current-opcode-index 2))
 
-(defun handle-output-opcode (ints current-opcode-index)
-  (let ((pos (aref ints (1+ current-opcode-index))))
-    (print (aref ints pos)))
-  2)
+(defun handle-output-opcode (ints current-opcode-index mode-flags)
+  (let ((val (get-value ints current-opcode-index mode-flags 1)))
+    (print val))
+  (+ current-opcode-index 2))
+
+(defun handle-jump-opcode (f ints current-opcode-index mode-flags)
+  (let ((val-1 (get-value ints current-opcode-index mode-flags 1))
+        (val-2 (get-value ints current-opcode-index mode-flags 2)))
+    (if (funcall f val-1 0)
+        val-2
+        (+ current-opcode-index 3))))
+
+(defun handle-comparison-opcode (f ints current-opcode-index mode-flags)
+  (let ((val-1 (get-value ints current-opcode-index mode-flags 1))
+        (val-2 (get-value ints current-opcode-index mode-flags 2))
+        (output-pos (aref ints (+ current-opcode-index 3))))
+    (setf (aref ints output-pos) (if (funcall f val-1 val-2) 1 0)))
+  (+ current-opcode-index 4))
 
 (defun process-intcode (ints)
-  (let ((inc 0))
-    (loop for i = 0 then (+ i inc)
+  (let ((new-i 0))
+    (loop for i = 0 then new-i
           until (= (aref ints i) 99)
-          do (let ((opcode (process-opcode (aref ints i))))
-               (setf inc
-                     (case opcode
-                       (1 (handle-arithmetic-opcode #'+ ints i))
-                       (2 (handle-arithmetic-opcode #'* ints i))
-                       (3 (handle-input-opcode ints i))
-                       (4 (handle-output-opcode ints i))
-                       (otherwise (error (format nil "Invalid opcode: ~a" opcode))))))))
+          do (multiple-value-bind (opcode mode-flags)
+                 (process-opcode (aref ints i))
+               (let ((opcode-func
+                       (case opcode
+                         (1 (curry #'handle-arithmetic-opcode #'+))
+                         (2 (curry #'handle-arithmetic-opcode #'*))
+                         (3 #'handle-input-opcode)
+                         (4 #'handle-output-opcode)
+                         (5 (curry #'handle-jump-opcode #'/=))
+                         (6 (curry #'handle-jump-opcode #'=))
+                         (7 (curry #'handle-comparison-opcode #'<))
+                         (8 (curry #'handle-comparison-opcode #'=))
+                         (otherwise (error (format nil "Invalid opcode: ~a" opcode))))))
+                 (setf new-i (funcall opcode-func ints i mode-flags))))))
   (aref ints 0))
 
 (defun process-opcode (opcode)
   (values (mod opcode 100)
           (loop for i = (floor (/ opcode 100)) then (floor (/ i 10))
-                for j = 0 then (incf j)
-                while (< j 3)
+                while (> i 0)
                 collecting (mod i 10))))
 
-(defun set-state (ints noun verb)
-  (setf (aref ints 1) noun
-        (aref ints 2) verb)
-  ints)
-
-(defun find-noun-and-verb (ints expected-output)
-  (loop for potential-noun from 0 to 99 do
-    (loop for potential-verb from 0 to 99 do
-      (let ((initial-ints (copy-seq ints)))
-        (set-state initial-ints potential-noun potential-verb)
-        (when (= (process-intcode initial-ints) expected-output)
-          (return-from find-noun-and-verb (+ (* 100 potential-noun) potential-verb)))))))
-
-(defun main (&key (part 2))
+(defun main ()
   (let* ((ints (with-open-file (input "input.txt")
                  (-> input
                      (read-line nil)
                      parse-input))))
-    (cond ((= part 1) (process-intcode ints))
-          ((= part 2) (find-noun-and-verb ints 19690720))
-          (t (error "`part' must be either 1 or 2")))))
+    (process-intcode ints)))
