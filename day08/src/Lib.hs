@@ -1,5 +1,6 @@
 module Lib where
 
+import           Control.Monad
 import           Data.List.Split
 
 type Layer = [[Int]]
@@ -25,3 +26,22 @@ layerWithLeastOfDigit digit image = fst $ foldr
   (firstLayer, countDigits digit firstLayer)
   (tail image)
   where firstLayer = head image
+
+groupPixels :: Image -> [[[Int]]]
+groupPixels image = foldr
+  combineLayers
+  (replicate (length $ head image) (replicate (length $ head $ head image) []))
+  image
+
+combineLayers :: [[Int]] -> [[[Int]]] -> [[[Int]]]
+combineLayers = zipWith $ zipWith (:)
+
+squashLayers :: [[[Int]]] -> [[Int]]
+squashLayers = map $ map (head . filter (< 2))
+
+printFinalImage :: [[Int]] -> IO ()
+printFinalImage = mapM_ $ \row -> do
+  forM_ row $ \pixel -> putStr $ case pixel of
+    1 -> "."
+    _ -> " "
+  putStrLn ""
