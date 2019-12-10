@@ -125,10 +125,10 @@
                (when (>= complete-in-a-row 5)
                  (return-from calculate-output-signal input-signal))))))
 
-(defun calculate-maximum-output-signal (ints)
+(defun calculate-maximum-output-signal (ints phase-settings)
   (apply #'max
          (mapcar (curry #'calculate-output-signal ints)
-                 (all-permutations '(5 6 7 8 9)))))
+                 (all-permutations phase-settings))))
 
 (defun all-permutations (list)
   (cond ((null list) nil)
@@ -137,9 +137,12 @@
                  append (mapcar (lambda (l) (cons element l))
                                 (all-permutations (remove element list)))))))
 
-(defun main ()
+(defun main (&key (part 2))
   (let* ((ints (with-open-file (input "input.txt")
                  (-> input
                      (read-line nil)
                      parse-input))))
-    (calculate-maximum-output-signal ints)))
+    (calculate-maximum-output-signal ints (case part
+                                            (1 '(0 1 2 3 4))
+                                            (2 '(5 6 7 8 9))
+                                            (otherwise (error "`part' must be either 1 or 2"))))))
