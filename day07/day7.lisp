@@ -10,17 +10,21 @@
 (defclass amplifier ()
   ((intcode :initarg :intcode :reader intcode)
    (position :initform 0)
-   (inputs :initarg :inputs :initform '())))
+   (inputs :initarg :inputs :initform '())
+   (complete :reader complete-p :initform nil)))
 
 (defmethod push-input ((amp amplifier) input)
   (let ((inputs (slot-value amp 'inputs)))
-    (setf inputs (append inputs (list input)))))
+    (setf (slot-value amp 'inputs) (append inputs (list input)))))
 
 (defmethod pop-input ((amp amplifier))
   (let* ((inputs (slot-value amp 'inputs))
          (input (car inputs)))
     (setf (slot-value amp 'inputs) (cdr inputs))
     input))
+
+(defmethod mark-complete ((amp amplifier))
+  (setf (slot-value amp 'complete) t))
 
 (defun parse-input (input)
   (->> input
@@ -93,7 +97,8 @@
                          (7 (curry #'handle-comparison-opcode #'<))
                          (8 (curry #'handle-comparison-opcode #'=))
                          (otherwise (error (format nil "Invalid opcode: ~a" opcode))))))
-                 (funcall opcode-func amp mode-flags))))))
+                 (funcall opcode-func amp mode-flags)))
+          finally (mark-complete amp))))
 
 (defun process-opcode (opcode)
   (values (mod opcode 100)
@@ -102,19 +107,23 @@
                 collecting (mod i 10))))
 
 (defun calculate-output-signal (ints phase-settings)
-  (let ((amplifiers (dotimes (i 5) (make-instance 'amplifier :intcode (copy-seq ints))))
-        (input-signal 0))
+  (let ((amplifiers (loop for i from 0 to 4 collecting (make-instance 'amplifier :intcode (copy-seq ints))))
+        (input-signal 0)
+        (complete-in-a-row 0))
     (mapc (lambda (amp ps) (push-input amp ps)) amplifiers phase-settings)
-    (push-input (car amplifiers) input-signal)
-    (loop for phase-setting in phase-settings
+    (loop for amp-num = 0 then (mod (1+ amp-num) 5)
           for s = (make-array '(0) :element-type 'base-char
                                    :fill-pointer 0 :adjustable t)
-          do (with-output-to-string (*standard-output* s)
-               (process-intcode (make-instance 'amplifier
-                                               :intcode (copy-seq ints)
-                                               :inputs (list phase-setting input-signal)))
-               (setf input-signal (parse-integer s :junk-allowed t)))
-          finally (return input-signal))))
+          do (let ((amp (nth amp-num amplifiers)))
+               (if (complete-p amp)
+                   (incf complete-in-a-row)
+                   (with-output-to-string (*standard-output* s)
+                     (setf complete-in-a-row 0)
+                     (push-input amp input-signal)
+                     (process-intcode amp)
+                     (setf input-signal (parse-integer s :junk-allowed t))))
+               (when (>= complete-in-a-row 5)
+                 (return-from calculate-output-signal input-signal))))))
 
 (defun calculate-maximum-output-signal (ints)
   (apply #'max
