@@ -1,4 +1,4 @@
-(asdf:defsystem #:day-6
+(asdf:defsystem #:day6
   :serial t
   :depends-on (:alexandria :split-sequence :cl-graph :cl-containers)
   :pathname "./"

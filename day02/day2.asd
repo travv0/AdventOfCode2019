@@ -1,4 +1,4 @@
-(asdf:defsystem #:day-2
+(asdf:defsystem #:day2
   :serial t
   :depends-on (:split-sequence :cl-arrows)
   :pathname "./"

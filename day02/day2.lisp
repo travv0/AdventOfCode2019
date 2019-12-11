@@ -1,10 +1,10 @@
-(defpackage :day-2
+(defpackage :day2
   (:use :cl
         :cl-arrows
         :split-sequence)
   (:export :main))
 
-(in-package :day-2)
+(in-package :day2)
 
 (defun parse-input (input)
   (->> input
