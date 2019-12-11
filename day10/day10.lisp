@@ -1,7 +1,7 @@
-(defpackage :day-10
+(defpackage :day10
   (:use :cl :split-sequence :alexandria))
 
-(in-package :day-10)
+(in-package :day10)
 
 (defvar *asteroid-map*)
 
@@ -137,7 +137,7 @@
       (case part
         (1 visible-asteroids)
         (2 (get-200th-asteroid-to-be-destroyed optimal-asteroid))
-        (otherwise (error ("`part' must be either 1 or 2")))))))
+        (otherwise (error "`part' must be either 1 or 2"))))))
 
 (defun tests ()
   (let ((*asteroid-map* (parse-input ".#..#

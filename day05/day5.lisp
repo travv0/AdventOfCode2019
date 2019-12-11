@@ -1,11 +1,11 @@
-(defpackage :day-5
+(defpackage :day5
   (:use :cl
         :cl-arrows
         :split-sequence
         :alexandria)
   (:export :main))
 
-(in-package :day-5)
+(in-package :day5)
 
 (declaim (optimize debug))
 

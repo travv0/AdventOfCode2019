@@ -1,11 +1,11 @@
-(defpackage :day-9
+(defpackage :day9
   (:use :cl
         :cl-arrows
         :split-sequence
         :alexandria)
   (:export :main))
 
-(in-package :day-9)
+(in-package :day9)
 
 (defvar *relative-base*)
 

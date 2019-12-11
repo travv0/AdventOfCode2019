@@ -1,11 +1,11 @@
-(defpackage :day-7
+(defpackage :day7
   (:use :cl
         :cl-arrows
         :split-sequence
         :alexandria)
   (:export :main))
 
-(in-package :day-7)
+(in-package :day7)
 
 (defclass amplifier ()
   ((intcode :initarg :intcode :reader intcode)
