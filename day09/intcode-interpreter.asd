@@ -1,4 +1,4 @@
-(asdf:defsystem #:day9
+(asdf:defsystem #:intcode-interpreter
   :serial t
   :depends-on (:split-sequence :cl-arrows :alexandria)
   :pathname "./"
