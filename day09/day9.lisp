@@ -11,6 +11,8 @@
 
 (in-package :intcode-interpreter)
 
+(declaim (optimize safety))
+
 (defclass computer ()
   ((%original-intcode :initarg :intcode
                       :initform (error "original-intcode is required")
@@ -82,9 +84,7 @@
   (+ (current-position com) 4))
 
 (defmethod get-input ((com computer))
-  (let ((input (car (inputs com))))
-    (setf (inputs com) (cdr (inputs com)))
-    input))
+  (pop (inputs com)))
 
 (defmethod flush-outputs ((com computer))
   (let ((outputs (outputs com)))
