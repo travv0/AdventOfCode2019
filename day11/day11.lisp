@@ -86,4 +86,5 @@
           (when complete
             (return (case part
                       (1 (hash-table-count panels))
-                      (2 (draw-panels panels))))))))))
+                      (2 (draw-panels panels))
+                      (otherwise (error "`part' must be either 1 or 2"))))))))))
