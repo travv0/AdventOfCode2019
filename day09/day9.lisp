@@ -24,9 +24,7 @@
    (outputs :initform '() :accessor outputs)))
 
 (defmethod reset-intcode ((com computer))
-  (setf (intcode com) (make-array (array-dimensions (original-intcode com))
-                                  :initial-contents (original-intcode com)
-                                  :adjustable t)))
+  (setf (intcode com) (copy-array (original-intcode com))))
 
 (defmethod initialize-instance :after ((com computer) &key)
   (reset-intcode com))
@@ -153,9 +151,11 @@
                 while (> i 0)
                 collecting (mod i 10))))
 
-(defun main (inputs)
+(defun main (&key (part 2))
   (let ((computer (make-computer (with-open-file (input "input.txt")
                                    (-> input
                                        (read-line nil)
                                        parse-input)))))
-    (run-computer computer inputs)))
+    (case part
+      ((1 2) (run-computer computer (list part)))
+      (otherwise (error "`part' must be either 1 or 2")))))
