@@ -1,6 +1,5 @@
 (ns day12.core
-  (:gen-class)
-  (:require [clojure.core.match :refer [match]]))
+  (:gen-class))
 
 (defn make-moon [x y z]
   {:pos {:x x :y y :z z} :vel {:x 0 :y 0 :z 0}})
@@ -65,10 +64,21 @@
 (defn get-kinetic-energy [{{:keys [x y z]} :vel}]
   (+ (Math/abs x) (Math/abs y) (Math/abs z)))
 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (as-> (parse-input (slurp "input.txt")) <>
-    (run-simulation <> 1000)
-    (map #(* (get-potential-energy %) (get-kinetic-energy %)) <>)
-    (reduce + <>)))
+(defn find-steps-until-repeated-state [moons]
+  (loop [moons moons
+         previous-states []
+         num-of-steps 0]
+    (if (some #(= moons %) previous-states)
+      num-of-steps
+      (let [new-moons (step moons)]
+        (recur new-moons (conj previous-states moons) (inc num-of-steps))))))
+
+(defn -main [& args]
+  (let [moons (parse-input (slurp "input.txt"))]
+    (println
+     "Part 1:"
+     (as-> moons <>
+       (run-simulation <> 1000)
+       (map #(* (get-potential-energy %) (get-kinetic-energy %)) <>)
+       (reduce + <>)))
+    (println "Part 2:" (find-steps-until-repeated-state moons))))
