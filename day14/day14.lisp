@@ -24,24 +24,25 @@
                (let* ((reaction (gethash chemical reactions))
                       (inputs (getf reaction :input))
                       (ore-amount (cdr (assoc :ore inputs))))
-                 ;; if this chemical can be produced from ore
                  (if ore-amount
-                     ;; repeatedly increase it by the total-output-amount you can get from ore
-                     ;; until you have enough and keep track of how much ore you're consuming
                      (loop while (< (gethash chemical amounts 0) total-output-amount) do
                        (incf (gethash chemical amounts 0) (getf reaction :output-amount))
                        (incf ore-count ore-amount))
-                     ;; else loop through each required chemical/amount and calculate the amount
-                     ;; of ore needed for each
-                     (loop for (required-chemical . required-amount) in inputs do
-                       (let ((total-required-amount (* required-amount total-output-amount)))
-                         (r required-chemical total-required-amount)
-                         (when (< (gethash required-chemical amounts 0) 0)
-                           (format t "~a ~a~%" required-chemical (gethash required-chemical amounts))
-                           )
-                         (decf (gethash required-chemical amounts 0) total-required-amount)))))))
+                     (progn
+                       (loop for (required-chemical . required-amount) in inputs do
+                         (loop while (< (gethash required-chemical amounts 0) required-amount) do
+                           (r required-chemical required-amount))
+                         (decf (gethash required-chemical amounts) required-amount))
+                       (incf (gethash chemical amounts 0) (getf reaction :output-amount)))))))
       (r chemical total-output-amount)
       ore-count)))
+
+(defun main (&key (part 1))
+  (let ((reactions (parse-input (read-file-into-string "input.txt"))))
+    (case part
+      (1 (ore-required-for-chemical reactions :fuel 1))
+      (2 (error "unimplemented"))
+      (otherwise (error "`part' must be either 1 or 2")))))
 
 (defun tests ()
   (let ((reactions (parse-input "10 ORE => 10 A
