@@ -13,36 +13,34 @@
           (push (cons (make-keyword name) (parse-integer amount)) list))
         (let ((output (car list))
               (input (cdr list)))
-          (setf (gethash (car output) reactions) (list :amount (cdr output)
+          (setf (gethash (car output) reactions) (list :output-amount (cdr output)
                                                        :input input)))))
     reactions))
 
-(defun ore-required-for-chemical (reactions chemical amount)
+(defun ore-required-for-chemical (reactions chemical total-output-amount)
   (let ((ore-count 0)
         (amounts (make-hash-table)))
-    (labels ((r (chemical amount)
+    (labels ((r (chemical total-output-amount)
                (let* ((reaction (gethash chemical reactions))
                       (inputs (getf reaction :input))
                       (ore-amount (cdr (assoc :ore inputs))))
                  ;; if this chemical can be produced from ore
                  (if ore-amount
-                     ;; repeatedly increase it by the amount you can get from ore
+                     ;; repeatedly increase it by the total-output-amount you can get from ore
                      ;; until you have enough and keep track of how much ore you're consuming
-                     (loop while (< (gethash chemical amounts 0) amount) do
-                       (incf (gethash chemical amounts 0) (getf reaction :amount))
+                     (loop while (< (gethash chemical amounts 0) total-output-amount) do
+                       (incf (gethash chemical amounts 0) (getf reaction :output-amount))
                        (incf ore-count ore-amount))
-                     ;; else
-                     (progn
-                       ;; loop through each required chemical/amount and calculate the amount
-                       ;; of oar needed for each
-                       (loop for (required-chemical . required-amount) in inputs do
-                         (let ((total-required-amount (* required-amount amount)))
-                           ;; loop
-                           (loop while (< (gethash required-chemical amounts 0) total-required-amount)
-                                 do (r required-chemical total-required-amount))
-                           (decf (gethash required-chemical amounts) total-required-amount)))
-                       (incf (gethash chemical amounts 0) (* amount (getf reaction :amount))))))))
-      (r chemical amount)
+                     ;; else loop through each required chemical/amount and calculate the amount
+                     ;; of ore needed for each
+                     (loop for (required-chemical . required-amount) in inputs do
+                       (let ((total-required-amount (* required-amount total-output-amount)))
+                         (r required-chemical total-required-amount)
+                         (when (< (gethash required-chemical amounts 0) 0)
+                           (format t "~a ~a~%" required-chemical (gethash required-chemical amounts))
+                           )
+                         (decf (gethash required-chemical amounts 0) total-required-amount)))))))
+      (r chemical total-output-amount)
       ore-count)))
 
 (defun tests ()
