@@ -38,6 +38,8 @@
                                        (run-computer computer))
         when (game-complete-p game-state)
           return (gethash (cons -1 0) game-state)
+        when (complete-p computer)
+          do (error "Game over")
         do (let* ((ball-x (ball-x game-state))
                   (paddle-x (paddle-x game-state))
                   (new-game-state (update-game game-state
