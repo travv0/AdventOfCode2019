@@ -7,7 +7,8 @@
            #:complete-p
            #:make-computer
            #:run-computer
-           #:reset-computer))
+           #:reset-computer
+           #:access-address))
 
 (in-package :intcode-interpreter)
 
@@ -45,27 +46,27 @@
                 :initial-contents (mapcar #'parse-integer digit-strings)
                 :adjustable t)))
 
-(defmethod access-ints ((com computer) index)
-  (when (<= (length (intcode com)) index)
-    (setf (intcode com) (adjust-array (intcode com) (+ index 1))))
-  (aref (intcode com) index))
+(defmethod access-address ((com computer) address)
+  (when (<= (length (intcode com)) address)
+    (setf (intcode com) (adjust-array (intcode com) (+ address 1))))
+  (aref (intcode com) address))
 
-(defmethod (setf access-ints) (new-value (com computer) index)
+(defmethod (setf access-address) (new-value (com computer) index)
   (when (<= (length (intcode com)) index)
     (adjust-array (intcode com) (+ index 1)))
   (setf (aref (intcode com) index) new-value))
 
 (defmethod get-value ((com computer) mode-flags argument-index)
-  (let ((arg (access-ints com (+ (current-position com) argument-index)))
+  (let ((arg (access-address com (+ (current-position com) argument-index)))
         (code (nth (1- argument-index) mode-flags)))
     (case code
-      ((nil 0) (access-ints com arg))
+      ((nil 0) (access-address com arg))
       (1 arg)
-      (2 (access-ints com (+ (relative-base com) arg)))
+      (2 (access-address com (+ (relative-base com) arg)))
       (otherwise (error (format nil "Invalid mode code: ~a" code))))))
 
 (defmethod get-output-pos ((com computer) mode-flags argument-index)
-  (let ((arg (access-ints com (+ (current-position com) argument-index)))
+  (let ((arg (access-address com (+ (current-position com) argument-index)))
         (code (nth (1- argument-index) mode-flags)))
     (case code
       ((nil 0) arg)
@@ -77,7 +78,7 @@
   (let ((val-1 (get-value com mode-flags 1))
         (val-2 (get-value com mode-flags 2))
         (output-pos (get-output-pos com mode-flags 3)))
-    (setf (access-ints com output-pos)
+    (setf (access-address com output-pos)
           (funcall f val-1 val-2)))
   (+ (current-position com) 4))
 
@@ -92,7 +93,7 @@
 (defmethod handle-input-opcode ((com computer) mode-flags)
   (let ((pos (get-output-pos com mode-flags 1))
         (input (get-input com)))
-    (setf (access-ints com pos) input))
+    (setf (access-address com pos) input))
   (+ (current-position com) 2))
 
 (defmethod handle-output-opcode ((com computer) mode-flags)
@@ -111,7 +112,7 @@
   (let ((val-1 (get-value com mode-flags 1))
         (val-2 (get-value com mode-flags 2))
         (output-pos (get-output-pos com mode-flags 3)))
-    (setf (access-ints com output-pos) (if (funcall f val-1 val-2) 1 0)))
+    (setf (access-address com output-pos) (if (funcall f val-1 val-2) 1 0)))
   (+ (current-position com) 4))
 
 (defmethod handle-relative-base-opcode ((com computer) mode-flags)
@@ -120,14 +121,14 @@
   (+ (current-position com) 2))
 
 (defmethod complete-p ((com computer))
-  (and (intcode com) (= (access-ints com (current-position com)) 99)))
+  (and (intcode com) (= (access-address com (current-position com)) 99)))
 
 (defmethod run-computer ((com computer) &optional inputs)
   (setf (inputs com) (append (inputs com) inputs))
   (loop until (complete-p com)
         finally (return-from run-computer (values (flush-outputs com) t))
         do (multiple-value-bind (opcode mode-flags)
-               (process-opcode (access-ints com (current-position com)))
+               (process-opcode (access-address com (current-position com)))
              (let ((opcode-func
                      (case opcode
                        (1 (curry #'handle-arithmetic-opcode #'+))
