@@ -108,16 +108,26 @@
         with segments = '()
         with longest-segment = (list (car route))
         for i = 0 then (+ i 2)
-        when (> i (length route)) do
-          (return (reverse segments))
-        if (search (subseq route 0 i) (cdr route)) do
-          (setf longest-segment (subseq route 0 i))
-        else do
-          (when (> (length longest-segment) 1)
-            (pushnew longest-segment segments :test 'equal))
-          (setf route (subseq route (- i 2))
+        when (> i (length route))
+          return (reverse segments)
+        if (position (subseq route 0 i) segments :test 'equal) do
+          (push (subseq route 0 i) segments)
+          (setf route (subseq route i)
                 longest-segment (list (car route))
-                i 2)))
+                i 2)
+        else do
+          (if (search (subseq route 0 i) (cdr route))
+              (setf longest-segment (subseq route 0 i))
+              (when (> (length longest-segment) 1)
+                (push longest-segment segments)
+                (setf route (subseq route (- i 2))
+                      longest-segment (list (car route))
+                      i 2)))))
+
+(defun get-main-routine (segments)
+  (mapcar (lambda (s) (code-char (+ (position s segments :test 'equal)
+                                    (char-code #\A))))
+          segments))
 
 (defun main (&key (part 1))
   (let* ((computer (make-computer
