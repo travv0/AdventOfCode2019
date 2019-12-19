@@ -34,7 +34,8 @@
                            (r required-chemical required-amount))
                          (decf (gethash required-chemical amounts) required-amount))
                        (incf (gethash chemical amounts 0) (getf reaction :output-amount)))))))
-      (r chemical total-output-amount)
+      (loop while (< (gethash chemical amounts 0) total-output-amount) do
+        (r chemical total-output-amount))
       ore-count)))
 
 (defun main (&key (part 1))
