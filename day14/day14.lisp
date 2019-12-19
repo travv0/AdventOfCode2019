@@ -41,43 +41,40 @@
 
 (defun get-amount-of-fuel-from-ore (reactions ore)
   (destructuring-bind (repeating-ore repeating-i)
-      (loop for i = 0 then (1+ i)
+      (loop for i = 1 then (1+ i)
             with current-ore-count = 0
             with current-amounts = (make-hash-table)
             with leftovers
+            with previous-ore = 0
             do (multiple-value-bind (ore-count amounts)
-                   (ore-required-for-chemical reactions :fuel (1+ i)
+                   (ore-required-for-chemical reactions :fuel i
                                                         :starting-ore current-ore-count
                                                         :starting-amounts current-amounts)
                  (when (> ore-count ore)
-                   (return-from get-amount-of-fuel-from-ore i))
+                   (return-from get-amount-of-fuel-from-ore (1- i)))
                  (setf current-ore-count ore-count
                        current-amounts amounts)
                  (let ((fuel (gethash :fuel amounts)))
                    (setf (gethash :fuel amounts) 0)
                    (let ((amounts-pos (position amounts leftovers :test 'equalp :from-end t)))
                      (when amounts-pos
-                       (return (list ore-count (- (1+ i) (- (length leftovers) amounts-pos))))))
+                       (print "here")
+                       (return (list previous-ore (- i (- (length leftovers) amounts-pos))))))
+                   ;; (when (every (curry #'= 0) (hash-table-values amounts))
+                   ;;   (return (list ore-count i)))
+                   (setf previous-ore ore-count)
                    (push (copy-hash-table amounts) leftovers)
-                   (setf (gethash :fuel amounts) fuel))))
+                   (setf (gethash :fuel amounts) fuel))
+                 ))
     (multiple-value-bind (fuel-estimate remainder) (floor ore repeating-ore)
-      (loop for i = 0 then (1+ i)
-            with current-ore-count = 0
-            with current-amounts = (make-hash-table)
-            do (multiple-value-bind (ore-count amounts)
-                   (ore-required-for-chemical reactions :fuel (1+ i)
-                                                        :starting-ore current-ore-count
-                                                        :starting-amounts current-amounts)
-                 (setf current-ore-count ore-count
-                       current-amounts amounts)
-                 (when (> ore-count remainder)
-                   (return (+ (* fuel-estimate repeating-i) i))))))))
+      (+ (* fuel-estimate repeating-i)
+         (get-amount-of-fuel-from-ore reactions remainder)))))
 
-(defun main (&key (part 1))
+(defun main (&key (part 2))
   (let ((reactions (parse-input (read-file-into-string "input.txt"))))
     (case part
       (1 (ore-required-for-chemical reactions :fuel 1))
-      (2 (error "unimplemented"))
+      (2 (get-amount-of-fuel-from-ore reactions 1000000000000))
       (otherwise (error "`part' must be either 1 or 2")))))
 
 (defun tests ()
