@@ -3,6 +3,8 @@
 
 (in-package :day14)
 
+(declaim (optimize speed))
+
 (defun parse-input (input)
   (let ((reactions (make-hash-table)))
     (loop for line in (str:lines input) do
@@ -44,8 +46,6 @@
       (loop for i = 1 then (1+ i)
             with current-ore-count = 0
             with current-amounts = (make-hash-table)
-            with leftovers
-            with previous-ore = 0
             do (multiple-value-bind (ore-count amounts)
                    (ore-required-for-chemical reactions :fuel i
                                                         :starting-ore current-ore-count
@@ -53,19 +53,7 @@
                  (when (> ore-count ore)
                    (return-from get-amount-of-fuel-from-ore (1- i)))
                  (setf current-ore-count ore-count
-                       current-amounts amounts)
-                 (let ((fuel (gethash :fuel amounts)))
-                   (setf (gethash :fuel amounts) 0)
-                   (let ((amounts-pos (position amounts leftovers :test 'equalp :from-end t)))
-                     (when amounts-pos
-                       (print "here")
-                       (return (list previous-ore (- i (- (length leftovers) amounts-pos))))))
-                   ;; (when (every (curry #'= 0) (hash-table-values amounts))
-                   ;;   (return (list ore-count i)))
-                   (setf previous-ore ore-count)
-                   (push (copy-hash-table amounts) leftovers)
-                   (setf (gethash :fuel amounts) fuel))
-                 ))
+                       current-amounts amounts)))
     (multiple-value-bind (fuel-estimate remainder) (floor ore repeating-ore)
       (+ (* fuel-estimate repeating-i)
          (get-amount-of-fuel-from-ore reactions remainder)))))
