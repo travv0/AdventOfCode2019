@@ -2,7 +2,7 @@
   (:gen-class))
 
 (defn make-moon [x y z]
-  {:pos {:x x :y y :z z} :vel {:x 0 :y 0 :z 0}})
+  {:x {:pos x :vel 0} :y {:pos y :vel 0} :z {:pos z :vel 0}})
 
 (defn line-to-moon [line]
   (as-> line <>
@@ -17,61 +17,74 @@
        clojure.string/split-lines
        (map line-to-moon)))
 
-(defn apply-gravity [moon other-moon]
-  (reduce #(let [pos (get-in moon [:pos %2])
-                 other-pos (get-in other-moon [:pos %2])]
-             (update-in %1 [:vel %2]
-                        (cond (> pos other-pos) dec
-                              (< pos other-pos) inc
-                              :else identity)))
-          moon
-          (keys (:pos moon))))
+(defn apply-gravity [moon-axis other-moon-axis]
+  (let [pos (:pos moon-axis)
+        other-pos (:pos other-moon-axis)]
+    (update moon-axis :vel
+            (cond (> pos other-pos) dec
+                  (< pos other-pos) inc
+                  :else identity))))
 
-(defn apply-gravities [moon other-moons]
-  (reduce apply-gravity moon other-moons))
+(defn apply-gravities [moon-axis other-moon-axes]
+  (reduce apply-gravity moon-axis other-moon-axes))
 
-(defn simulate-gravity [moons]
-  (loop [moons moons
-         n (count moons)]
+(defn simulate-gravity [moon-axes]
+  (loop [moon-axes moon-axes
+         n (count moon-axes)]
     (if (> n 0)
-      (let [rest-moons (rest moons)]
-        (recur (conj (vec rest-moons)
-                     (apply-gravities (first moons) rest-moons))
+      (let [rest-moon-axes (rest moon-axes)]
+        (recur (conj (vec rest-moon-axes)
+                     (apply-gravities (first moon-axes) rest-moon-axes))
                (dec n)))
-      moons)))
+      moon-axes)))
 
-(defn apply-velocity [moon]
-  (reduce #(let [vel (get-in moon [:vel %2])]
-             (update-in %1 [:pos %2] (fn [pos] (+ pos vel))))
-          moon
-          (keys (:pos moon))))
+(defn apply-velocity [moon-axis]
+  (update moon-axis :pos (fn [pos] (+ pos (:vel moon-axis)))))
 
-(defn step [moons]
-  (->> moons
-      simulate-gravity
-      (map apply-velocity)))
+(defn step [moon-axes]
+  (->> moon-axes
+       simulate-gravity
+       (map apply-velocity)))
 
 (defn run-simulation [moons num-of-steps]
-  (loop [moons moons
+  (loop [xs (map :x moons)
+         ys (map :y moons)
+         zs (map :z moons)
          n num-of-steps]
     (if (> n 0)
-      (recur (step moons) (dec n))
-      moons)))
+      (recur (step xs) (step ys) (step zs) (dec n))
+      (map #(assoc {} :x %1 :y %2 :z %3) xs ys zs))))
 
-(defn get-potential-energy [{{:keys [x y z]} :pos}]
+(defn get-potential-energy [{{x :pos} :x {y :pos} :y {z :pos} :z}]
   (+ (Math/abs x) (Math/abs y) (Math/abs z)))
 
-(defn get-kinetic-energy [{{:keys [x y z]} :vel}]
+(defn get-kinetic-energy [{{x :vel} :x {y :vel} :y {z :vel} :z}]
   (+ (Math/abs x) (Math/abs y) (Math/abs z)))
+
+(defn gcd
+  [a b]
+  (if (zero? b)
+    a
+    (recur b (mod a b))))
+
+(defn lcm
+  [a b]
+  (/ (* a b) (gcd a b)))
 
 (defn find-steps-until-repeated-state [moons]
-  (loop [moons moons
-         previous-states []
-         num-of-steps 0]
-    (if (some #(= moons %) previous-states)
-      num-of-steps
-      (let [new-moons (step moons)]
-        (recur new-moons (conj previous-states moons) (inc num-of-steps))))))
+  (let [f (fn [moon-axes]
+            (loop [moon-axes moon-axes
+                   initial-state nil
+                   num-of-steps 0]
+              (if (= moon-axes initial-state)
+                num-of-steps
+                (recur (step moon-axes)
+                       (or initial-state moon-axes)
+                       (inc num-of-steps)))))
+        xs (map :x moons)
+        ys (map :y moons)
+        zs (map :z moons)]
+    (reduce lcm (pmap f [xs ys zs]))))
 
 (defn -main [& args]
   (let [moons (parse-input (slurp "input.txt"))]
