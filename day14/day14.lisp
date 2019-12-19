@@ -17,9 +17,10 @@
                                                        :input input)))))
     reactions))
 
-(defun ore-required-for-chemical (reactions chemical total-output-amount)
-  (let ((ore-count 0)
-        (amounts (make-hash-table)))
+(defun ore-required-for-chemical (reactions chemical total-output-amount
+                                  &key (starting-ore 0) (starting-amounts (make-hash-table)))
+  (let ((ore-count starting-ore)
+        (amounts starting-amounts))
     (labels ((r (chemical total-output-amount)
                (let* ((reaction (gethash chemical reactions))
                       (inputs (getf reaction :input))
@@ -36,7 +37,41 @@
                        (incf (gethash chemical amounts 0) (getf reaction :output-amount)))))))
       (loop while (< (gethash chemical amounts 0) total-output-amount) do
         (r chemical total-output-amount))
-      ore-count)))
+      (values ore-count amounts))))
+
+(defun get-amount-of-fuel-from-ore (reactions ore)
+  (destructuring-bind (repeating-ore repeating-i)
+      (loop for i = 0 then (1+ i)
+            with current-ore-count = 0
+            with current-amounts = (make-hash-table)
+            with leftovers
+            do (multiple-value-bind (ore-count amounts)
+                   (ore-required-for-chemical reactions :fuel (1+ i)
+                                                        :starting-ore current-ore-count
+                                                        :starting-amounts current-amounts)
+                 (when (> ore-count ore)
+                   (return-from get-amount-of-fuel-from-ore i))
+                 (setf current-ore-count ore-count
+                       current-amounts amounts)
+                 (let ((fuel (gethash :fuel amounts)))
+                   (setf (gethash :fuel amounts) 0)
+                   (let ((amounts-pos (position amounts leftovers :test 'equalp :from-end t)))
+                     (when amounts-pos
+                       (return (list ore-count (- (1+ i) (- (length leftovers) amounts-pos))))))
+                   (push (copy-hash-table amounts) leftovers)
+                   (setf (gethash :fuel amounts) fuel))))
+    (multiple-value-bind (fuel-estimate remainder) (floor ore repeating-ore)
+      (loop for i = 0 then (1+ i)
+            with current-ore-count = 0
+            with current-amounts = (make-hash-table)
+            do (multiple-value-bind (ore-count amounts)
+                   (ore-required-for-chemical reactions :fuel (1+ i)
+                                                        :starting-ore current-ore-count
+                                                        :starting-amounts current-amounts)
+                 (setf current-ore-count ore-count
+                       current-amounts amounts)
+                 (when (> ore-count remainder)
+                   (return (+ (* fuel-estimate repeating-i) i))))))))
 
 (defun main (&key (part 1))
   (let ((reactions (parse-input (read-file-into-string "input.txt"))))
@@ -70,7 +105,8 @@
 7 DCFZ, 7 PSHF => 2 XJWVT
 165 ORE => 2 GPVTF
 3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT")))
-    (test reactions 13312))
+    (test reactions 13312)
+    (test2 reactions 82892753))
   (let ((reactions (parse-input "2 VPVL, 7 FWMGM, 2 CXFTF, 11 MNCFX => 1 STKFG
 17 NVRVD, 3 JNWZP => 8 VPVL
 53 STKFG, 6 MNCFX, 46 VJHF, 81 HVMC, 68 CXFTF, 25 GNMV => 1 FUEL
@@ -83,7 +119,8 @@
 1 NVRVD => 8 CXFTF
 1 VJHF, 6 MNCFX => 4 RFSQX
 176 ORE => 6 VJHF")))
-    (test reactions 180697))
+    (test reactions 180697)
+    (test2 reactions 5586022))
   (let ((reactions (parse-input "171 ORE => 8 CNZTR
 7 ZLQW, 3 BMBT, 9 XCVML, 26 XMNCP, 1 WPTQ, 2 MZWV, 1 RJRHP => 4 PLWSL
 114 ORE => 4 BHXH
@@ -101,11 +138,19 @@
 121 ORE => 7 VRPVC
 7 XCVML => 6 RJRHP
 5 BHXH, 4 VRPVC => 5 LTCX")))
-    (test reactions 2210736)))
+    (test reactions 2210736)
+    (test2 reactions 460664)))
 
 (defun test (reactions expected-result)
   (format t "~12:d ORE for 1 FUEL: " expected-result)
   (let ((actual-result (ore-required-for-chemical reactions :fuel 1)))
+    (if (= actual-result expected-result)
+        (format t "Passed.~%")
+        (format t "FAILED! Got ~:d~%" actual-result))))
+
+(defun test2 (reactions expected-result)
+  (format t "could produce ~:d FUEL: " expected-result)
+  (let ((actual-result (get-amount-of-fuel-from-ore reactions 1000000000000)))
     (if (= actual-result expected-result)
         (format t "Passed.~%")
         (format t "FAILED! Got ~:d~%" actual-result))))
