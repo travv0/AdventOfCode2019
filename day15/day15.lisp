@@ -151,6 +151,22 @@
                 (push (cons x y) coords))))))
     coords))
 
+(defun get-clear-coords (map)
+  (let ((coords '()))
+    (when (> (hash-table-count map) 0)
+      (let* ((keys (hash-table-keys map))
+             (xs (mapcar #'car keys))
+             (ys (mapcar #'cdr keys))
+             (max-x (apply #'max xs))
+             (max-y (apply #'max ys))
+             (min-x (apply #'min xs))
+             (min-y (apply #'min ys)))
+        (loop for y from min-y to max-y do
+          (loop for x from min-x to max-x do
+            (when (eql (gethash (cons x y) map) :clear)
+              (push (cons x y) coords))))))
+    coords))
+
 (defun fill-in-the-blanks (com map pos)
   (loop for coords in (get-unchecked-coords map)
         with new-pos = pos do
@@ -161,19 +177,25 @@
               (return))
             (setf new-pos (move-droid com map new-pos dir)))))
 
-(defun outline-map (com map)
+(defun outline-map (com map minimum-map-width)
   (loop for pos = (cons 0 0)
           then (move-droid com map pos next-move)
-        for next-move = (find-next-move map pos '(1000 . 0))
-          then (find-next-move map pos '(1000 . 0))
+        for next-move = (find-next-move map pos (cons (floor minimum-map-width 2) 0))
+          then (find-next-move map pos (cons (floor minimum-map-width 2) 0))
         unless next-move
           return pos))
 
-(defun main ()
+(defun main (&key (part 2))
   (let ((computer (make-computer (parse-input (read-file-into-string "input.txt"))))
         (map (make-hash-table :test 'equal)))
-    (fill-in-the-blanks computer map (outline-map computer map))
+    (fill-in-the-blanks computer map (outline-map computer map 1000))
     (let ((oxygen-coords (loop for k being the hash-keys of map using (hash-value v)
                                when (eql v :oxygen)
                                  return k)))
-      (length (cdr (find-path map '(0 . 0) oxygen-coords))))))
+      (case part
+        (1 (length (cdr (find-path map '(0 . 0) oxygen-coords))))
+        (2 (apply #'max
+                  (mapcar (lambda (coords)
+                            (length (cdr (find-path map oxygen-coords coords))))
+                          (get-clear-coords map))))
+        (otherwise (error "`part' must be either 1 or 2"))))))
