@@ -29,7 +29,7 @@
       digits
       (fft (1- num-of-phases) base-pattern (apply-pattern base-pattern digits))))
 
-(defun main (&key (part 1))
+(defun main (&key (part 2))
   (let* ((digits (digits (read-file-into-string "input.txt"))))
     (case part
       (1 (let ((result (fft 100 '(0 1 0 -1) digits)))
