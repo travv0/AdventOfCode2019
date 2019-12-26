@@ -85,6 +85,11 @@
         when (char= tile char)
           return coords))
 
+(defun find-all-pos (map char)
+  (loop for coords being the hash-keys of map using (hash-value tile)
+        when (char= tile char)
+          collect coords))
+
 (defun get-key-positions (map)
   (loop for tile being the hash-values of map using (hash-key pos)
         when (lower-case-p tile)
@@ -96,7 +101,7 @@
           collect tile))
 
 (defun get-key-routes (map)
-  (let* ((keys (coerce (cons (find-pos map #\@) (get-key-positions map)) 'vector))
+  (let* ((keys (coerce (append (find-all-pos map #\@) (get-key-positions map)) 'vector))
          (key-count (length keys)))
     (loop for i below key-count
           append (loop for j from i below key-count
@@ -113,10 +118,10 @@
 (defun get-paths-between-keys (map)
   (let ((paths (make-hash-table :test 'equal)))
     (loop for (start end) in (get-key-routes map) do
-      (let* ((node (find-shortest-path start
-                                       end
-                                       (curry #'get-neighbors map)
-                                       #'get-distance)))
+      (when-let* ((node (find-shortest-path start
+                                            end
+                                            (curry #'get-neighbors map)
+                                            #'get-distance)))
         (unless (equal start end)
           (let ((path (make-path :path-end end
                                  :path-length (node-path-length node)
@@ -132,19 +137,39 @@
                     (gethash end paths)))))))
     paths))
 
-(defun distance-to-collect-keys (map start paths &optional
-                                                   (remaining-keys (get-keys map))
-                                                   (cache (make-hash-table :test 'equal)))
-  (cond ((null remaining-keys) 0)
-        (t (or (gethash (cons start remaining-keys) cache)
-               (setf (gethash (cons start remaining-keys) cache)
-                     (loop for path in (reachable-keys (gethash start paths) remaining-keys)
-                           minimizing (+ (path-length path)
-                                         (distance-to-collect-keys map
-                                                                   (path-end path)
-                                                                   paths
-                                                                   (remove (key path) remaining-keys)
-                                                                   cache))))))))
+(defun tuple-compare (comparison-functions)
+  (lambda (left right)
+    (loop for fn in comparison-functions
+          for x in left
+          for y in right
+            thereis (funcall fn x y)
+          until (funcall fn y x))))
+
+(defun distance-to-collect-keys (map starts paths &optional
+                                                    (remaining-keys (get-keys map))
+                                                    (cache (make-hash-table :test 'equal)))
+  (let ((starts (sort starts
+                      (tuple-compare (list #'< #'<))
+                      :key (lambda (c)
+                             (destructuring-bind (x . y) c
+                               (list x y))))))
+    (loop for start in starts
+          minimizing
+          (cond ((null remaining-keys) 0)
+                (t (or (gethash (cons starts remaining-keys) cache)
+                       (let ((reachable-keys (reachable-keys (gethash start paths) remaining-keys)))
+                         (if reachable-keys
+                             (setf (gethash (cons starts remaining-keys) cache)
+                                   (loop for path in reachable-keys
+                                         minimizing (+ (path-length path)
+                                                       (distance-to-collect-keys
+                                                        map
+                                                        (cons (path-end path)
+                                                              (remove start starts :test 'equal))
+                                                        paths
+                                                        (remove (key path) remaining-keys)
+                                                        cache))))
+                             most-positive-fixnum))))))))
 
 (defun reachable-keys (paths remaining-keys)
   (remove-if-not (lambda (path)
@@ -155,9 +180,20 @@
                                     (doors path)))
                             paths)))
 
-(defun main (&key (part 1))
+(defun main (&key (part 2))
   (let ((map (parse-input (read-file-into-string "input.txt"))))
     (case part
-      (1 (distance-to-collect-keys map (find-pos map #\@) (get-paths-between-keys map)))
-      (2 (error "unimplemented"))
+      (1 (distance-to-collect-keys map (find-all-pos map #\@) (get-paths-between-keys map)))
+      (2
+       (let ((center-pos (find-pos map #\@)))
+         (setf (gethash center-pos map) #\#
+               (gethash (cons (1+ (car center-pos)) (cdr center-pos)) map) #\#
+               (gethash (cons (1- (car center-pos)) (cdr center-pos)) map) #\#
+               (gethash (cons (car center-pos) (1+ (cdr center-pos))) map) #\#
+               (gethash (cons (car center-pos) (1- (cdr center-pos))) map) #\#
+               (gethash (cons (1- (car center-pos)) (1- (cdr center-pos))) map) #\@
+               (gethash (cons (1+ (car center-pos)) (1- (cdr center-pos))) map) #\@
+               (gethash (cons (1+ (car center-pos)) (1+ (cdr center-pos))) map) #\@
+               (gethash (cons (1- (car center-pos)) (1+ (cdr center-pos))) map) #\@)
+         (distance-to-collect-keys map (find-all-pos map #\@) (get-paths-between-keys map))))
       (otherwise (error "`part' must be either 1 or 2")))))
