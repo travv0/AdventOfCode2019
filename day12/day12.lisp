@@ -1,9 +1,6 @@
 (defpackage #:day12
-  (:use #:cl
-        #:alexandria
-        #:cl-arrows
-        #:lparallel)
-  (:shadowing-import-from #:travv0.utils #:defun))
+  (:use #:travv0.prelude
+        #:lparallel))
 
 (in-package #:day12)
 
@@ -87,16 +84,16 @@
   (+ (abs x) (abs y) (abs z)))
 
 (defun find-steps-until-repeated-state (moons)
-  (labels ((f (moon-axes &optional initial-state (num-of-steps 0))
-             (if (equal moon-axes initial-state)
-                 num-of-steps
-                 (f (step-once moon-axes)
-                    (or initial-state moon-axes)
-                    (1+ num-of-steps)))))
-    (let ((xs (mapcar (lambda (moon) (getf moon :x)) moons))
-          (ys (mapcar (lambda (moon) (getf moon :y)) moons))
-          (zs (mapcar (lambda (moon) (getf moon :z)) moons)))
-      (reduce #'lcm (pmapcar #'f (list xs ys zs))))))
+  (bind ((xs (mapcar (lambda (moon) (getf moon :x)) moons))
+         (ys (mapcar (lambda (moon) (getf moon :y)) moons))
+         (zs (mapcar (lambda (moon) (getf moon :z)) moons))
+         ((:labels f (moon-axes &optional initial-state (num-of-steps 0)))
+          (if (equal moon-axes initial-state)
+              num-of-steps
+              (f (step-once moon-axes)
+                 (or initial-state moon-axes)
+                 (1+ num-of-steps)))))
+    (reduce #'lcm (pmapcar #'f (list xs ys zs)))))
 
 (defun main (&key (part 2))
   (let ((moons (parse-input (read-file-into-string "input.txt"))))
