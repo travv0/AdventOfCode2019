@@ -112,7 +112,7 @@
 
 (defun simulate-until-match (planet)
   (loop with past-states = (list planet)
-        with new-state = (simulate-minute planet)
+        with new-state = (simulate-minute-part-1 planet)
         until (position new-state past-states)
         finally (return new-state)
         do (push new-state past-states)
