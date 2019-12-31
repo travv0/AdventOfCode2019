@@ -3,9 +3,7 @@
         #:travv0.utils
         #:alexandria
         #:cl-arrows
-        #:lparallel)
-  (:shadowing-import-from #:travv0.utils
-                          #:defun))
+        #:lparallel))
 
 (in-package #:day12)
 
@@ -37,7 +35,7 @@
           (funcall fn val))
     new-list))
 
-(defun apply-gravity ((&whole moon-axis &key pos) (&key ((:pos other-pos))))
+(desfun apply-gravity ((&whole moon-axis &key pos) (&key ((:pos other-pos))))
   (update moon-axis :vel
           (cond ((> pos other-pos) #'1-)
                 ((< pos other-pos) #'1+)
@@ -76,14 +74,14 @@
        (mapcar (lambda (moon) (getf moon :z)) moons)
        num-of-steps)))
 
-(defun get-potential-energy ((&key ((:x (&key ((:vel x) 0))))
-                                ((:y (&key ((:vel y) 0))))
-                                ((:z (&key ((:vel z) 0))))))
+(desfun get-potential-energy ((&key ((:x (&key ((:vel x) 0))))
+                                    ((:y (&key ((:vel y) 0))))
+                                    ((:z (&key ((:vel z) 0))))))
   (+ (abs x) (abs y) (abs z)))
 
-(defun get-kinetic-energy ((&key ((:x (&key ((:pos x) 0))))
-                              ((:y (&key ((:pos y) 0))))
-                              ((:z (&key ((:pos z) 0))))))
+(desfun get-kinetic-energy ((&key ((:x (&key ((:pos x) 0))))
+                                  ((:y (&key ((:pos y) 0))))
+                                  ((:z (&key ((:pos z) 0))))))
   (+ (abs x) (abs y) (abs z)))
 
 (defun find-steps-until-repeated-state (moons)
