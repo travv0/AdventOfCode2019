@@ -1,20 +1,9 @@
 (defpackage #:day12
-  (:use #:cl #:alexandria #:cl-arrows #:lparallel)
-  (:import-from #:fset #:@ #:with #:lookup #:empty-map #:equal?)
-  (:shadowing-import-from #:fset
-                          ;; Shadowed type/constructor names
-                          #:set #:map
-                          ;; Shadowed set operations
-                          #:union #:intersection #:set-difference #:complement
-                          ;; Shadowed sequence operations
-                          #:first #:last #:subseq #:reverse #:sort #:stable-sort
-                          #:reduce
-                          #:find #:find-if #:find-if-not
-                          #:count #:count-if #:count-if-not
-                          #:position #:position-if #:position-if-not
-                          #:remove #:remove-if #:remove-if-not
-                          #:substitute #:substitute-if #:substitute-if-not
-                          #:some #:every #:notany #:notevery))
+  (:use #:cl
+        #:travv0.utils
+        #:alexandria
+        #:cl-arrows
+        #:lparallel))
 
 (in-package #:day12)
 
@@ -22,9 +11,9 @@
   (setf *kernel* (lparallel:make-kernel 4)))
 
 (defun make-moon (x y z)
-  (map (:x (map (:pos x) (:vel 0)))
-       (:y (map (:pos y) (:vel 0)))
-       (:z (map (:pos z) (:vel 0)))))
+  (list :x (list :pos x :vel 0)
+        :y (list :pos y :vel 0)
+        :z (list :pos z :vel 0)))
 
 (defun line-to-moon (line)
   (cl-ppcre:register-groups-bind (x y z)
@@ -39,17 +28,18 @@
        str:lines
        (mapcar #'line-to-moon)))
 
-(defun update (map key fn)
-  (let ((val (@ map key)))
-    (with map key (funcall fn val))))
+(defun update (plist key fn)
+  (let ((val (getf plist key))
+        (new-list (copy-list plist)))
+    (setf (getf new-list key)
+          (funcall fn val))
+    new-list))
 
-(defun apply-gravity (moon-axis other-moon-axis)
-  (let ((pos (@ moon-axis :pos))
-        (other-pos (@ other-moon-axis :pos)))
-    (update moon-axis :vel
-            (cond ((> pos other-pos) #'1-)
-                  ((< pos other-pos) #'1+)
-                  (t #'identity)))))
+(desfun apply-gravity ((&whole moon-axis &key pos) (&key ((:pos other-pos))))
+  (update moon-axis :vel
+          (cond ((> pos other-pos) #'1-)
+                ((< pos other-pos) #'1+)
+                (t #'identity))))
 
 (defun apply-gravities (moon-axis other-moon-axes)
   (reduce #'apply-gravity other-moon-axes :initial-value moon-axis))
@@ -65,7 +55,7 @@
     (f moon-axes (length moon-axes))))
 
 (defun apply-velocity (moon-axis)
-  (update moon-axis :pos (lambda (pos) (+ pos (@ moon-axis :vel)))))
+  (update moon-axis :pos (lambda (pos) (+ pos (getf moon-axis :vel)))))
 
 (defun step-once (moon-axes)
   (->> moon-axes
@@ -77,38 +67,33 @@
              (if (> n 0)
                  (f (step-once xs) (step-once ys) (step-once zs) (1- n))
                  (mapcar (lambda (x y z)
-                           (-> (empty-map)
-                               (with :x x)
-                               (with :y y)
-                               (with :z z)))
+                           (list :x x :y y :z z))
                          xs ys zs))))
-    (f (mapcar (lambda (moon) (@ moon :x)) moons)
-       (mapcar (lambda (moon) (@ moon :y)) moons)
-       (mapcar (lambda (moon) (@ moon :z)) moons)
+    (f (mapcar (lambda (moon) (getf moon :x)) moons)
+       (mapcar (lambda (moon) (getf moon :y)) moons)
+       (mapcar (lambda (moon) (getf moon :z)) moons)
        num-of-steps)))
 
-(defun get-potential-energy (moon)
-  (let ((x (@ (@ moon :x) :pos))
-        (y (@ (@ moon :y) :pos))
-        (z (@ (@ moon :z) :pos)))
-    (+ (abs x) (abs y) (abs z))))
+(desfun get-potential-energy ((&key ((:x (&key ((:vel x)))))
+                                    ((:y (&key ((:vel y)))))
+                                    ((:z (&key ((:vel z)))))))
+  (+ (abs x) (abs y) (abs z)))
 
-(defun get-kinetic-energy (moon)
-  (let ((x (@ (@ moon :x) :vel))
-        (y (@ (@ moon :y) :vel))
-        (z (@ (@ moon :z) :vel)))
-    (+ (abs x) (abs y) (abs z))))
+(desfun get-kinetic-energy ((&key ((:x (&key ((:pos x)))))
+                                  ((:y (&key ((:pos y)))))
+                                  ((:z (&key ((:pos z)))))))
+  (+ (abs x) (abs y) (abs z)))
 
 (defun find-steps-until-repeated-state (moons)
   (labels ((f (moon-axes &optional initial-state (num-of-steps 0))
-             (if (equal? moon-axes initial-state)
+             (if (equal moon-axes initial-state)
                  num-of-steps
                  (f (step-once moon-axes)
                     (or initial-state moon-axes)
                     (1+ num-of-steps)))))
-    (let ((xs (mapcar (lambda (moon) (@ moon :x)) moons))
-          (ys (mapcar (lambda (moon) (@ moon :y)) moons))
-          (zs (mapcar (lambda (moon) (@ moon :z)) moons)))
+    (let ((xs (mapcar (lambda (moon) (getf moon :x)) moons))
+          (ys (mapcar (lambda (moon) (getf moon :y)) moons))
+          (zs (mapcar (lambda (moon) (getf moon :z)) moons)))
       (reduce #'lcm (pmapcar #'f (list xs ys zs))))))
 
 (defun main (&key (part 2))
