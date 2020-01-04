@@ -98,11 +98,10 @@
 (defun main (&key (part 2))
   (let ((moons (parse-input (read-file-into-string "input.txt"))))
     (case part
-      (1 (-<> moons
-              (run-simulation <> 1000)
-              (mapcar (lambda (moon) (* (get-potential-energy moon)
-                                        (get-kinetic-energy moon)))
-                      <>)
-              (reduce #'+ <>)))
+      (1 (-<>> moons
+               (run-simulation <> 1000)
+               (mapcar (lambda (moon) (* (get-potential-energy moon)
+                                         (get-kinetic-energy moon))))
+               (reduce #'+)))
       (2 (find-steps-until-repeated-state moons))
       (otherwise (error "`part' must be either 1 or 2")))))
