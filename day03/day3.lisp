@@ -1,8 +1,8 @@
-(defpackage :day3
+(defpackage :aoc2019.day3
   (:use :cl
         :split-sequence))
 
-(in-package :day3)
+(in-package :aoc2019.day3)
 
 (defun lay-wire (grid wire-num curr-x curr-y axis arith-func count total-distance)
   (let ((changing-coord (if (eq axis :x) curr-x curr-y)))

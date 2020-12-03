@@ -1,7 +1,7 @@
-(defpackage #:day19
+(defpackage #:aoc2019.day19
   (:use #:cl #:intcode-interpreter #:alexandria))
 
-(in-package :day19)
+(in-package :aoc2019.day19)
 
 (defun check-area (computer area-size)
   (let ((area (make-hash-table :test 'equal)))

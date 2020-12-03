@@ -1,4 +1,4 @@
-(asdf:defsystem #:day15
+(asdf:defsystem #:aoc2019.day15
   :serial t
   :depends-on (:alexandria :intcode-interpreter)
   :pathname "./"

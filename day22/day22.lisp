@@ -1,8 +1,8 @@
-(defpackage #:day22
+(defpackage #:aoc2019.day22
   (:use #:cl
         #:alexandria))
 
-(in-package #:day22)
+(in-package #:aoc2019.day22)
 
 (defun deal-into-new-stack ()
   (list -1 -1))

@@ -1,11 +1,11 @@
-(defpackage :day5
+(defpackage :aoc2019.day5
   (:use :cl
         :cl-arrows
         :split-sequence
         :alexandria)
   (:export :main))
 
-(in-package :day5)
+(in-package :aoc2019.day5)
 
 (declaim (optimize debug))
 

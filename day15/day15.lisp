@@ -1,9 +1,9 @@
-(defpackage :day15
+(defpackage :aoc2019.day15
   (:use #:cl
         #:alexandria
         #:intcode-interpreter))
 
-(in-package :day15)
+(in-package :aoc2019.day15)
 
 (defstruct node
   path

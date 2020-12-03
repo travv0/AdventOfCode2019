@@ -1,7 +1,7 @@
-(defpackage #:day18
+(defpackage #:aoc2019.day18
   (:use #:cl #:alexandria))
 
-(in-package #:day18)
+(in-package #:aoc2019.day18)
 
 (defun parse-input (input)
   (loop with map = (make-hash-table :test 'equal)

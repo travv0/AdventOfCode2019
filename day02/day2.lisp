@@ -1,10 +1,10 @@
-(defpackage :day2
+(defpackage :aoc2019.day2
   (:use :cl
         :cl-arrows
         :split-sequence)
   (:export :main))
 
-(in-package :day2)
+(in-package :aoc2019.day2)
 
 (defun parse-input (input)
   (->> input

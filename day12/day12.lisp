@@ -1,8 +1,8 @@
-(defpackage #:day12
+(defpackage #:aoc2019.day12
   (:use #:travv0.prelude
         #:lparallel))
 
-(in-package #:day12)
+(in-package #:aoc2019.day12)
 
 (declaim (optimize speed))
 

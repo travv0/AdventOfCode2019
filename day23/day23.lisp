@@ -1,9 +1,9 @@
-(defpackage #:day23
+(defpackage #:aoc2019.day23
   (:use #:cl
         #:intcode-interpreter
         #:alexandria))
 
-(in-package #:day23)
+(in-package #:aoc2019.day23)
 
 (defun initialize-computers (number-of-computers intcode)
   (let ((computers (make-hash-table)))

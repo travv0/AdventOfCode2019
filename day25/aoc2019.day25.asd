@@ -1,5 +1,5 @@
-(asdf:defsystem #:day23
+(asdf:defsystem #:aoc2019.day25
   :serial t
   :depends-on (:alexandria :intcode-interpreter)
   :pathname "./"
-  :components ((:file "day23")))
+  :components ((:file "day25")))

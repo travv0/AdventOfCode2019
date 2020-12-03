@@ -1,7 +1,7 @@
-(defpackage #:day25
+(defpackage #:aoc2019.day25
   (:use #:cl #:alexandria #:intcode-interpreter))
 
-(in-package #:day25)
+(in-package #:aoc2019.day25)
 
 (defun main ()
   (let ((computer (make-computer (parse-input (read-file-into-string "input.txt")))))

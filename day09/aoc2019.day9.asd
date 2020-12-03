@@ -1,5 +1,5 @@
-(asdf:defsystem #:day7
+(asdf:defsystem #:aoc2019.day9
   :serial t
   :depends-on (:split-sequence :cl-arrows :alexandria)
   :pathname "./"
-  :components ((:file "day7")))
+  :components ((:file "day9")))

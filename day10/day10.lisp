@@ -1,7 +1,7 @@
-(defpackage :day10
+(defpackage :aoc2019.day10
   (:use :cl :split-sequence :alexandria))
 
-(in-package :day10)
+(in-package :aoc2019.day10)
 
 (defvar *asteroid-map*)
 

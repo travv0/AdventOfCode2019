@@ -1,4 +1,4 @@
-(asdf:defsystem #:day2
+(asdf:defsystem #:aoc2019.day2
   :serial t
   :depends-on (:split-sequence :cl-arrows)
   :pathname "./"

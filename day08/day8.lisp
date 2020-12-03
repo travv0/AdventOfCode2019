@@ -1,7 +1,7 @@
-(defpackage #:day8
+(defpackage #:aoc2019.day8
   (:use #:cl #:alexandria))
 
-(in-package #:day8)
+(in-package #:aoc2019.day8)
 
 (defun digits (int-string)
   (map 'list

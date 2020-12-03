@@ -1,9 +1,9 @@
-(defpackage :day11
+(defpackage :aoc2019.day11
   (:use #:cl
         #:intcode-interpreter
         #:alexandria))
 
-(in-package :day11)
+(in-package :aoc2019.day11)
 
 (declaim (optimize safety))
 

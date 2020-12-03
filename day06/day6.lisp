@@ -1,11 +1,11 @@
-(defpackage :day6
+(defpackage :aoc2019.day6
   (:use :cl
         :alexandria
         :split-sequence
         :cl-graph
         :cl-containers))
 
-(in-package :day6)
+(in-package :aoc2019.day6)
 
 (defun list-orbiting-planet-vertexes (planet-vertex)
   (let ((child (first (child-vertexes planet-vertex))))

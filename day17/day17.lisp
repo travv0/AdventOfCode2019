@@ -1,9 +1,9 @@
-(defpackage :day17
+(defpackage :aoc2019.day17
   (:use #:cl
         #:alexandria
         #:intcode-interpreter))
 
-(in-package :day17)
+(in-package :aoc2019.day17)
 
 (defun convert-computer-output (output)
   (let ((lines (str:lines (map 'string #'code-char output) :omit-nulls t)))

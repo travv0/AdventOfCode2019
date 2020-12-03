@@ -1,7 +1,7 @@
-(defpackage :day-4
+(defpackage :aoc2019.day-4
   (:use :cl))
 
-(in-package :day-4)
+(in-package :aoc2019.day-4)
 
 (defun number-to-char-list (number)
   (coerce (write-to-string number) 'list))

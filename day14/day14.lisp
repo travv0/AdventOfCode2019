@@ -1,7 +1,7 @@
-(defpackage :day14
+(defpackage :aoc2019.day14
   (:use #:cl #:alexandria))
 
-(in-package :day14)
+(in-package :aoc2019.day14)
 
 (declaim (optimize speed))
 

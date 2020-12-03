@@ -1,7 +1,7 @@
-(defpackage #:day21
+(defpackage #:aoc2019.day21
   (:use #:cl #:alexandria #:intcode-interpreter))
 
-(in-package #:day21)
+(in-package #:aoc2019.day21)
 
 (defparameter *springscript-walk* (format nil "~
 NOT A J

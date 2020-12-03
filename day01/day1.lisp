@@ -1,8 +1,8 @@
-(defpackage :day-1
+(defpackage :aoc2019.day1
   (:use :cl)
   (:export :main))
 
-(in-package :day-1)
+(in-package :aoc2019.day1)
 
 (defun calculate-fuel (mass)
   (- (floor (/ mass 3))

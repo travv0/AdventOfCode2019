@@ -1,8 +1,8 @@
-(defpackage #:day16
+(defpackage #:aoc2019.day16
   (:use #:cl #:alexandria #:cl-arrows)
   (:import-from #:incf-cl #:scan*))
 
-(in-package #:day16)
+(in-package #:aoc2019.day16)
 
 (defun create-pattern (pos base-pattern)
   (->> base-pattern

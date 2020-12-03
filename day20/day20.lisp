@@ -1,7 +1,7 @@
-(defpackage #:day20
+(defpackage #:aoc2019.day20
   (:use #:cl #:alexandria))
 
-(in-package #:day20)
+(in-package #:aoc2019.day20)
 
 (defstruct node
   path

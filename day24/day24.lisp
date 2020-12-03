@@ -1,7 +1,7 @@
-(defpackage #:day24
+(defpackage #:aoc2019.day24
   (:use #:cl #:alexandria))
 
-(in-package #:day24)
+(in-package #:aoc2019.day24)
 
 (defun parse-input (input)
   (let ((planet 0))

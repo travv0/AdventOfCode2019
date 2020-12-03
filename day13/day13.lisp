@@ -1,7 +1,7 @@
-(defpackage :day13
+(defpackage :aoc2019.day13
   (:use #:cl #:alexandria #:intcode-interpreter))
 
-(in-package :day13)
+(in-package :aoc2019.day13)
 
 (defun display-game (game-state)
   (let* ((keys (hash-table-keys game-state))
